@@ -1,0 +1,2 @@
+providers:
+  - Optimole\Laravel\ServiceProvider

@@ -1,0 +1,52 @@
+{
+    "name": "codeinwp/optimole-laravel",
+    "description": "Integrate Optimole cloud-based image optimization service with your Laravel application",
+    "homepage": "https://optimole.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Optimole Team",
+            "email": "friends@optimole.com",
+            "homepage": "https://optimole.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/Codeinwp/codeinwp/optimole-laravel/issues",
+        "source": "https://github.com/Codeinwp/optimole-laravel"
+    },
+    "require": {
+        "illuminate/support": "^9.0|^10.0|^11.0",
+        "codeinwp/optimole-sdk": "^1.2"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "laravel/framework": "^9.0|^10.0|^11.0",
+        "orchestra/testbench": "^7.0|^8.0|^9.0",
+        "phpstan/phpstan": "^1.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Optimole\\Laravel\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Optimole\\Laravel\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Optimole\\Laravel\\ServiceProvider"
+            ],
+            "aliases": {
+                "Optimole": "Optimole\\Laravel\\Facade"
+            }
+        }
+    }
+}

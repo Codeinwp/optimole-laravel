@@ -1,0 +1,83 @@
+name: Continuous Integration
+on: push
+
+jobs:
+  code-quality:
+    name: Run code quality checks on PHP 8.0
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dependency-version: [ '', '--prefer-lowest' ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+
+      - name: Install dependencies
+        run: composer update ${{ matrix.dependency-version }} --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyze --error-format=github
+
+      - name: Run PHP CS Fixer
+        run: vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff
+
+  test:
+    runs-on: ${{ matrix.os }}
+    needs: code-quality
+    timeout-minutes: 5
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        php: [8.0, 8.1, 8.2, 8.3]
+        laravel: [9.*, 10.*, 11.*]
+        stability: [prefer-stable]
+        include:
+          - laravel: 9.*
+            testbench: 7.*
+            carbon: ^2.72.2
+          - laravel: 10.*
+            testbench: 8.*
+            carbon: ^2.72.2
+          - laravel: 11.*
+            testbench: 9.*
+            carbon: ^2.72.2
+        exclude:
+          - laravel: 10.*
+            php: 8.0
+          - laravel: 11.*
+            php: 8.0
+          - laravel: 11.*
+            php: 8.1
+
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" --no-interaction --no-update
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+
+      - name: Execute tests
+        run: vendor/bin/phpunit
